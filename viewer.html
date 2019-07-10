@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<script src="viewer/js/jquery-3.4.1.min.js"></script>
+
+<style>
+* { margin: 0; padding: 0; }
+nav {
+  background-color: #F0F0F0;
+  position: absolute;
+  width: 200px;
+  height: 100%;
+}
+nav ul {
+  list-style-type: none;
+}
+nav ul li.selected {
+  background-color: #F8F8F8;
+  font-weight: bold;
+}
+nav ul li a {
+  display: block;
+  padding: 5px 10px;
+  text-decoration: none;
+  float: left;
+}
+nav ul li a.tabLink {
+  width: 120px;
+}
+nav ul li a.openNew {
+  width: 30px;
+}
+nav ul li a.openNew img {
+  width: 20px;
+  margin: auto;
+}
+nav ul li a:hover {
+  background-color: #F8F8F8;
+}
+header {
+  background-color: #F0F0F0;
+  position: absolute;
+  top: 0;
+}
+main {
+  position: absolute;
+}
+main iframe {
+  width: 99%;
+}
+</style>
+<title>Demo Viewer</title>
+</head>
+<body>
+
+<nav>
+  <ul></ul>
+</nav>
+
+<header>
+</header>
+
+<main>
+  <iframe src=""></iframe>
+</main>
+
+<script src="viewer/config.js"></script>
+<script>
+function refreshSize() {
+  try {
+    $('header').width($(window).width() - $('nav').width());
+    $('header').offset({left: $('nav').width()});
+    $('main').width($(window).width() - $('nav').width());
+    $('main').height($(window).height() - $('header').height());
+    $('main').offset({top: $('header').height(), left: $('nav').width()});
+    var windowHeight = $(window).height();
+    var mainHeight = $('main').height();
+    var iframeContentHeight;
+    try {
+      iframeContentHeight = $('iframe')[0].contentWindow.document.documentElement.scrollHeight;
+    } catch(ee) {}
+    var mainHeightDiff = windowHeight - mainHeight;
+    var iframeContentHeightDiff = windowHeight - iframeContentHeight;
+    var iframeHeight;
+    if(iframeContentHeight == null) {
+      iframeHeight = mainHeight;
+    } else {
+      iframeHeight = (mainHeight > iframeContentHeight)? mainHeight: iframeContentHeight;
+    }
+    $('iframe').height(iframeHeight - 11);
+  } catch(e) {
+  }
+}
+
+function goLink(navTarget, urlTarget, headerContent) {
+  try {
+    $('nav li').removeClass('selected');
+    $(navTarget).parent('li').addClass('selected');
+    $('header').html(headerContent);
+    $('iframe').attr('src', urlTarget);
+    refreshSize();
+  } catch(e) {
+  }
+}
+
+function addLink(config) {
+  var jqUl = $('nav ul');
+  $.each(config, function(index, value) {
+    var jqLi = $('<li></li>');
+    var jqA = $('<a></a>');
+    jqUl.append(jqLi);
+    jqLi.append(jqA);
+
+    jqA.attr('href', '#')
+    jqA.addClass('tabLink');
+
+    var linkOnClick = 'goLink(this, "' + value.link + '", "' + value.headerContent + '");';
+    jqA.attr('onclick', linkOnClick);
+    jqA.text(value.linkName);
+
+    jqA = $('<a></a>');
+    jqLi.append(jqA);
+
+    jqA.attr('href', value.link);
+    jqA.attr('target', 'blank');
+    jqA.addClass('openNew');
+
+    var jqImg = $('<img />');
+    jqA.append(jqImg);
+
+    jqImg.attr('src', 'viewer/img/openNewIcon.png');
+    jqImg.attr('alt', 'Open New');
+  });
+}
+
+$(function() {
+  var resizeTimer;
+  $(window).on('resize', function() {
+    if(resizeTimer != null) clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(refreshSize, 200);
+  });
+  addLink(linkConfig);
+  refreshSize();
+  $($('nav ul li a')[0]).click();
+});
+
+</script>
+</body>
+</html>
+
